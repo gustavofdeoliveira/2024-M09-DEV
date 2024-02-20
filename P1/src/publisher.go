@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-// SensorData represents the data from the SPS30 sensor
-
 func public(opts *MQTTSubscriber) {
 	singletonClient := opts
 
@@ -33,6 +31,7 @@ func public(opts *MQTTSubscriber) {
 	if err != nil {
 		log.Fatalf("Erro ao decodificar o JSON: %s", err)
 	}
+	// json represents the data from the SPS30 sensor
 	var newObject []map[string]interface{}
 	for _, item := range result {
 		newItem := make(map[string]interface{})
