@@ -72,10 +72,47 @@ func TestCreateAndPublisObject(t *testing.T) {
 	opts := MQTT.NewClientOptions().AddBroker("tcp://localhost:1891")
 	opts.SetClientID("go_subscriber")
 
-	subscriber := NewMQTTSubscriber(opts, &MQTTSubscriber{})
+	subscriber := NewMQTTSubscriber(&MQTTSubscriber{})
 
 	publishObject(newObject, subscriber)
 
+}
+
+func TestPublicAndRecevedMessage(t *testing.T) {
+	fmt.Println("TestPublicAndRecevedMessage")
+	var file = openFile("data.json")
+	var bytes = readFile(file)
+
+	var result []map[string]interface{}
+	var err = json.Unmarshal(bytes, &result)
+	if err != nil {
+		t.Fatalf("Erro ao decodificar o JSON: %s", err)
+	}
+
+	newObject := createObject(result)
+
+	var subscriber = NewMQTTSubscriber(&MQTTSubscriber{})
+
+	var jsonObject = publishObject(newObject, subscriber)
+
+	var messageReceiver = &MQTTSubscriber{}
+
+	messageChannel := make(chan string)
+
+	subscriber.client.Subscribe("topic/publisher", 1, func(client MQTT.Client, msg MQTT.Message){
+		messageReceiver.ReceiveMessage(client, msg)
+
+		messageChannel <- string(msg.Payload())
+	})
+
+	receivedMessage := <-messageChannel
+
+	if receivedMessage != jsonObject{
+		t.Errorf("Erro ao receber mensagem")
+	
+	}
+
+	close(messageChannel)
 }
 
 // func TestTimeSend(t *testing.T) {
@@ -102,10 +139,8 @@ func TestCreateAndPublisObject(t *testing.T) {
 // }
 
 func TestConnection(t *testing.T) {
-	opts := MQTT.NewClientOptions().AddBroker("tcp://localhost:1891")
-	opts.SetClientID("go_subscriber")
 
-	subscriber := NewMQTTSubscriber(opts, &MQTTSubscriber{})
+	subscriber := NewMQTTSubscriber(&MQTTSubscriber{})
 
 	if subscriber.client.IsConnected() {
 		fmt.Println("Conectado")

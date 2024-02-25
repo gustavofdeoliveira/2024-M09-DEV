@@ -9,19 +9,22 @@ Criar um simulador de dispositivos IoT utilizando o protocolo MQTT através do u
 Sensor escolhido: SPS30
 
 ### Construtor
-```go
 
-type SensorData struct {
-	PM1         float64 `json:"pm1"`
-	PM25        float64 `json:"pm25"`
-	PM10        float64 `json:"pm10"`
-	Temperature float64 `json:"temperature"`
-	Humidity    float64 `json:"humidity"`
-	Pressure    float64 `json:"pressure"`
-	Time        string  `json:"time"`
-}
+Visando uma mutabilidade fácil, foi criado a coleta de dados por meio de um json, onde se passa o atributo e o valor maximo ou minimo que o sensor pode coletar.
 
+```json
+	[
+		{ "PM1": 100,
+    	"PM10": 100,
+    	"PM25": 100,
+    	"Datetime": "2019-12-01T00:00:00Z",
+    	"Temperature": 50,
+    	"Humidity": 100,
+    	"Pressure": 2000
+		}
+	]
 ```
+Onde no código, é feito a leitura do json, verificação dos dados e transformação dos dados para o formato de envio.
 
 ## Como Rodar
 

@@ -6,4 +6,4 @@ go mod init paho-go
 # Limpa o módulo baixando as dependências necessárias
 go mod tidy
 
-go run publisher.go subscriber.go
+go run main.go
