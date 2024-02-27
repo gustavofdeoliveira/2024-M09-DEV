@@ -24,6 +24,7 @@ Visando uma mutabilidade fácil, foi criado a coleta de dados por meio de um jso
 		}
 	]
 ```
+
 Onde no código, é feito a leitura do json, verificação dos dados e transformação dos dados para o formato de envio.
 
 ## Como Rodar
@@ -36,7 +37,8 @@ Onde no código, é feito a leitura do json, verificação dos dados e transform
 
     mosquitto -c mosquitto.conf
 
-``` 
+```
+
 2. Abra um novo terminal e acesse o diretório do projeto, com o seguinte comando:
 
 ```bash
@@ -44,14 +46,26 @@ Onde no código, é feito a leitura do json, verificação dos dados e transform
     cd P1/src
 
 ```
-3. Agora, rode o seguinte comando:
-    
+
+3. Crie um arquivo `.env` com as seguintes variáveis:
+
 ```bash
-    
-    chmod +x start.sh
-    
+
+	MQTT_HOST=
+	HIVE_USER=usuário
+	HIVE_PSWD=senha
+	BROKER_ADDR=host
 ```
-4. Rode o seguinte comando para instalar as dependências do projeto e executar o simulador:
+
+4. Agora, rode o seguinte comando:
+
+```bash
+  
+    chmod +x start.sh
+  
+```
+
+5. Rode o seguinte comando para instalar as dependências do projeto e executar o simulador:
 
 ```bash
 
@@ -59,37 +73,10 @@ Onde no código, é feito a leitura do json, verificação dos dados e transform
 
 ```
 
-5. O simulador irá rodar e enviará mensagens para o tópico `sensor` a cada 1 segundos.
-
-### Testes
-
-```bash
-
-    mosquitto -c mosquitto.conf
-
-``` 
-2. Abra um novo terminal e acesse o diretório do projeto, com o seguinte comando:
-
-```bash
-
-    cd P2/src
-
-```
-3. Agora, rode o seguinte comando:
-    
-```bash
-    
-    chmod +x test.sh
-    
-```
-4. Rode o seguinte comando para instalar as dependências do projeto e executar o simulador:
-
-```bash
-
-    ./test.sh
-```
-
+6. O simulador irá rodar e enviará mensagens para o tópico `sensor` a cada 1 segundos.
 
 ## Demonstração
 
-[Vídeo de monstração](https://drive.google.com/file/d/1trqCl5dTe_jJFk7POIDjuSHcIlBqVVZf/view?usp=sharing)
+![alt text](image/print.png)
+
+[Vídeo de monstração](https://drive.google.com/file/d/1rJ73duxCnO5NPMY8a6HWGtOaIWBJj-Va/view?usp=drive_link)

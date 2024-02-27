@@ -126,7 +126,13 @@ func main() {
         // Aqui você chama o método diretamente do seu subscriber.
         subscriber.ReceiveMessage(client, msg)
     })
-	publishObject(createObject(readFile(openFile("data.json")), subscriber))
+	var file = readFile(openFile("data.json"))
+	result := []map[string]interface{}{}
+	var err = json.Unmarshal(file, &result)
+	if err != nil {
+		log.Fatalf("Erro ao decodificar o JSON: %s", err)
+	}
+	publishObject(createObject(result), subscriber)
 	
     sigCh := make(chan os.Signal, 1)
     signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
