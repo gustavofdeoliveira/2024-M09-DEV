@@ -1,0 +1,8 @@
+[{ "PM1": 100,
+    "PM10": 100,
+    "PM25": 100,
+    "Datetime": "2019-12-01T00:00:00Z",
+    "Temperature": 50,
+    "Humidity": 100,
+    "Pressure": 2000
+}]
