@@ -2,6 +2,6 @@
 *go.sum
 *db-data/
 *metabase-data/
-*mogo-data/
+*mongo-data/
 go.mod
 go.sum

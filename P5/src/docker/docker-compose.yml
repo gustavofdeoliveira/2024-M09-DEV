@@ -42,7 +42,7 @@ services:
       MB_DB_PORT: "5432"
       MB_DB_USER: ${POSTGRES_USER}          # Usuário do banco de dados para o Metabase
       MB_DB_PASS: ${POSTGRES_PASSWORD}      # Senha do banco de dados para o Metabase
-      MB_DB_HOST: db
+      MB_DB_HOST: localhost
     ports:
       - "3000:3000"
     networks:

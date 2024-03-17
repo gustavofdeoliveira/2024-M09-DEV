@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	MQTT "github.com/eclipse/paho.mqtt.golang"
+	godotenv "github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"io/ioutil"
@@ -12,9 +15,6 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	"context"
-	MQTT "github.com/eclipse/paho.mqtt.golang"
-	godotenv "github.com/joho/godotenv"
 )
 
 // MQTTSubscriber é uma estrutura que representa um assinante MQTT.
@@ -114,25 +114,30 @@ func (s *MQTTSubscriber) ReceiveMessage(client MQTT.Client, msg MQTT.Message) {
 	if err != nil {
 		log.Fatal("Erro ao carregar o arquivo .env")
 	}
-	mongoUser := os.Getenv("MONGO_USER")
-	mongoPassword := os.Getenv("MONGO_PASSWORD")
+	
 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	mongoOpts := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s@localhost:27017", MONGO_INITDB_ROOT_USERNAME, MONGO_INITDB_ROOT_PASSWORD)).SetServerAPIOptions(serverAPI)
+	mongoOpts := options.Client().ApplyURI(fmt.Sprintf("mongodb://usuarioMongo:senhaMongo@localhost:27017")).SetServerAPIOptions(serverAPI)
 
 	mongoClient, errors := mongo.Connect(context.TODO(), mongoOpts)
 	if errors != nil {
 		panic(errors)
+	} else {
+		fmt.Println("Conectado ao MongoDB!")
 	}
 
 	var payload map[string]interface{}
 	if err := json.Unmarshal(msg.Payload(), &payload); err != nil {
 		panic(err)
+	} else {
+		fmt.Println("Mensagem recebida:", payload)
 	}
 
 	collection := mongoClient.Database("local").Collection("messages")
 	if _, err := collection.InsertOne(context.TODO(), payload); err != nil {
 		panic(err)
+	} else {
+		fmt.Println("Mensagem inserida no MongoDB!")
 	}
 }
 
