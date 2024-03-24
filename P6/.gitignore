@@ -1,0 +1,8 @@
+*go.mod
+*go.sum
+*db-data/
+*metabase-data/
+*mongo-data/
+go.mod
+go.sum
+.env
