@@ -3,9 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/confluentinc/confluent-kafka-go/kafka"
-	MQTT "github.com/eclipse/paho.mqtt.golang"
-	godotenv "github.com/joho/godotenv"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -13,6 +10,10 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/confluentinc/confluent-kafka-go/kafka"
+	MQTT "github.com/eclipse/paho.mqtt.golang"
+	godotenv "github.com/joho/godotenv"
 )
 
 // MQTTSubscriber é uma estrutura que representa um assinante MQTT.
@@ -20,10 +21,6 @@ type MQTTSubscriber struct {
 	client MQTT.Client
 }
 
-// MessageReceiver é uma interface que define um método para receber mensagens MQTT.
-type MessageReceiver interface {
-	ReceiveMessage(client MQTT.Client, msg MQTT.Message)
-}
 
 func openFile(path string) *os.File {
 	file, err := os.Open(path)
@@ -41,33 +38,24 @@ func readFile(file *os.File) []byte {
 	return bytes
 }
 
-func createObject(result []map[string]interface{}) []map[string]interface{} {
-	var newObject []map[string]interface{}
-	for _, item := range result {
-		newItem := make(map[string]interface{})
-		for key, value := range item {
-			// Checa se a chave é "Datetime". Se sim, atualiza para o datetime atual.
-			if key == "Datetime" {
-				newItem[key] = time.Now().Format(time.RFC3339)
-			} else {
-				// Para outras chaves, tenta realizar uma operação específica baseada no tipo do valor
-				switch v := value.(type) {
-				case float64:
-					// Se o valor for float64, multiplica por um número aleatório
-					newItem[key] = v * rand.Float64()
-				default:
-					// Para todos os outros tipos, apenas copia o valor
-					newItem[key] = value
-				}
+func createObject(result map[string]interface{}) map[string]interface{} {
+	newItem := make(map[string]interface{})
+	for key, value := range result {
+		if key == "Datetime" {
+			newItem[key] = time.Now().Format(time.RFC3339)
+		} else {
+			switch v := value.(type) {
+			case float64:
+				newItem[key] = v * rand.Float64()
+			default:
+				newItem[key] = value
 			}
 		}
-		newObject = append(newObject, newItem)
 	}
-
-	return newObject
+	return newItem
 }
 
-func publishObject(newObject []map[string]interface{}, singletonClient *MQTTSubscriber) string {
+func publishObject(newObject map[string]interface{}, singletonClient *MQTTSubscriber) string {
 	jsonData, err := json.Marshal(newObject)
 	if err != nil {
 		fmt.Println("Error marshalling JSON:", err)
@@ -87,7 +75,6 @@ var connectLostHandler MQTT.ConnectionLostHandler = func(client MQTT.Client, err
 	fmt.Printf("Connection lost: %v", err)
 }
 
-// NewMQTTSubscriber cria e retorna um novo assinante MQTT.
 func NewMQTTSubscriber() *MQTTSubscriber {
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -113,23 +100,20 @@ func NewMQTTSubscriber() *MQTTSubscriber {
 	return &MQTTSubscriber{client: client}
 }
 
-// ReceiveMessage implementa o método da interface MessageReceiver para receber mensagens MQTT.
 func (s *MQTTSubscriber) ReceiveMessage(client MQTT.Client, msg MQTT.Message) {
 	fmt.Printf("Recebido: %s do tópico: %s\n", msg.Payload(), msg.Topic())
 	kafka_producer(msg)
 }
 
 func kafka_producer(msg MQTT.Message) {
-
-	kafkaConf := &kafka.ConfigMap{
+	producer, err := kafka.NewProducer(&kafka.ConfigMap{
 		"bootstrap.servers": os.Getenv("BOOTSTRAP_SERVERS"),
+		"client.id":         "go-kafka-producer",
 		"security.protocol": "SASL_SSL",
 		"sasl.mechanisms":   "PLAIN",
 		"sasl.username":     os.Getenv("SASL_USERNAME"),
 		"sasl.password":     os.Getenv("SASL_PASSWORD"),
-	}
-
-	producer, err := kafka.NewProducer(kafkaConf)
+	})
 	if err != nil {
 		log.Fatalf("Falha ao criar produtor: %v", err)
 	}
@@ -138,25 +122,21 @@ func kafka_producer(msg MQTT.Message) {
 	topic := os.Getenv("KAFKA_TOPIC")
 	fmt.Printf("Conectado ao tópico %s...\n", topic)
 
-	message, err := json.Marshal(msg.Payload())
-	if err != nil {
-		log.Printf("Erro ao parsear a mensagem: %v", err)
-	}
+	message := string(msg.Payload())
 
 	fmt.Printf("Parsed message: %s\n", message)
 
 	producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-		Value:          message,
+		Value:          []byte(message),
 	}, nil)
 
 }
+
 func main() {
 	subscriber := NewMQTTSubscriber()
 
-	// Assumindo que você corrigiu o método `ReceiveMessage` para ser utilizado corretamente aqui.
 	subscriber.client.Subscribe("topic/publisher", 1, func(client MQTT.Client, msg MQTT.Message) {
-		// Aqui você chama o método diretamente do seu subscriber.
 		subscriber.ReceiveMessage(client, msg)
 	})
 	var file = readFile(openFile("./data/data.json"))
@@ -165,7 +145,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Erro ao decodificar o JSON: %s", err)
 	}
-	publishObject(createObject(result), subscriber)
+	for _, item := range result {
+		publishObject(createObject(item), subscriber)
+		time.Sleep(5 * time.Second)
+	}
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
