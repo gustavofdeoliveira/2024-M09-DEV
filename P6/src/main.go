@@ -16,11 +16,9 @@ import (
 	godotenv "github.com/joho/godotenv"
 )
 
-// MQTTSubscriber é uma estrutura que representa um assinante MQTT.
 type MQTTSubscriber struct {
 	client MQTT.Client
 }
-
 
 func openFile(path string) *os.File {
 	file, err := os.Open(path)
@@ -63,22 +61,22 @@ func publishObject(newObject map[string]interface{}, singletonClient *MQTTSubscr
 	}
 	token := singletonClient.client.Publish("topic/publisher", 0, false, jsonData)
 	token.Wait()
-	fmt.Println("Publicado:", string(jsonData))
+	fmt.Println("[BROKER] Publicado:", string(jsonData))
 	return string(jsonData)
 }
 
 var connectHandler MQTT.OnConnectHandler = func(client MQTT.Client) {
-	fmt.Println("Connected")
+	fmt.Println("[BROKER] Connected")
 }
 
 var connectLostHandler MQTT.ConnectionLostHandler = func(client MQTT.Client, err error) {
-	fmt.Printf("Connection lost: %v", err)
+	fmt.Printf("[BROKER] Connection lost: %v", err)
 }
 
 func NewMQTTSubscriber() *MQTTSubscriber {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatalf("Error loading .env file: %s", err)
+		log.Fatalf("[ENV] Error loading: %s", err)
 	}
 
 	var broker = os.Getenv("BROKER_ADDR")
@@ -94,14 +92,14 @@ func NewMQTTSubscriber() *MQTTSubscriber {
 
 	client := MQTT.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		log.Fatalf("Error connecting to MQTT broker: %s", token.Error())
+		log.Fatalf("[BROKER] Error connecting to MQTT: %s", token.Error())
 	}
 
 	return &MQTTSubscriber{client: client}
 }
 
 func (s *MQTTSubscriber) ReceiveMessage(client MQTT.Client, msg MQTT.Message) {
-	fmt.Printf("Recebido: %s do tópico: %s\n", msg.Payload(), msg.Topic())
+	fmt.Printf("[BROKER] Recebido: %s do tópico: %s\n", msg.Payload(), msg.Topic())
 	kafka_producer(msg)
 }
 
@@ -115,22 +113,23 @@ func kafka_producer(msg MQTT.Message) {
 		"sasl.password":     os.Getenv("SASL_PASSWORD"),
 	})
 	if err != nil {
-		log.Fatalf("Falha ao criar produtor: %v", err)
+		log.Fatalf("[PRODUCER] Falha ao criar produtor: %v", err)
 	}
 	defer producer.Close()
 
 	topic := os.Getenv("KAFKA_TOPIC")
-	fmt.Printf("Conectado ao tópico %s...\n", topic)
+	fmt.Printf("[PRODUCER] Conectado ao tópico %s...\n", topic)
 
 	message := string(msg.Payload())
 
-	fmt.Printf("Parsed message: %s\n", message)
+	fmt.Printf("[PRODUCER] Parsed message: %s\n", message)
 
 	producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
 		Value:          []byte(message),
 	}, nil)
 
+	producer.Flush(15 * 1000)
 }
 
 func main() {
@@ -147,7 +146,6 @@ func main() {
 	}
 	for _, item := range result {
 		publishObject(createObject(item), subscriber)
-		time.Sleep(5 * time.Second)
 	}
 
 	sigCh := make(chan os.Signal, 1)
