@@ -121,6 +121,7 @@ func (s *MQTTSubscriber) ReceiveMessage(client MQTT.Client, msg MQTT.Message) {
 		message, err := consumer.ReadMessage(-1)
 		if err == nil {
 			fmt.Printf("[CONSUMER] Received message: %s\n", string(message.Value))
+			
 		} else {
 			fmt.Printf("[CONSUMER] error: %v (%v)\n", err, message)
 			break
