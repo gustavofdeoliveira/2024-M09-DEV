@@ -2,35 +2,37 @@
 
 ## Requisitos
 
-1. Ter o Docker instalado
+1. Ter uma conta no HiveMQ Cloud e no Confluent Cloud
 
-## Como rodar
+## Configuração
 
-1. Acesse a pasta `P5/src/docker` e execute o comando `docker-compose up -d` ou `docker compose up -d`
-2. Espere alguns segundos para que o postgres, metabase e mongo sejam inicializados
-3. Acesse o metabase em `http://localhost:3000` e configure a conexão com o banco de dados postgres.
-
-## Configuração do Metabase e Postgres
-
-1. pós a etapa de configuração do metabase, você pode configurar a integração com o banco de dados postgres acessando a aba `Databases` e clicando em `Add Database` e selecionando `Postgres` e preenchendo os campos com as informações do banco de dados.
+Na pasta raiz do projeto, rode o comando `cd src/` para acessar a pasta `src`. E crie um arquivo `.env` com as seguintes informações:
 
 ### Informações do banco de dados
 
 ```env
-POSTGRES_PASSWORD=minhaSenhaSegura
-POSTGRES_USER=meuUsuario
-POSTGRES_DB=meuBancoDeDados
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
+HIVE_USER=""
+HIVE_PSWD=""
+BROKER_ADDR=""
+BOOTSTRAP_SERVERS=""
+SASL_USERNAME=""
+SASL_PASSWORD=""
+KAFKA_TOPIC="ponderada"
 ```
 
 NOTA: Preencha os campos com as informações do acima.
 
-## Verificando Integração
+Após a criação do arquivo `.env`, acesse a página do HiveMQ Cloud e crie uma `Integrations` para o confluent, após ter configurado e criado um cluster no Confluent Cloud e tópico denominado `ponderada`. Na integração, copie o `username`, `password`, `bootstrap` e preencha os campos `Source - Topic` e `Destination Topic` respectivamente com o valor `ponderada`.
 
-1. Após a configuração do banco de dados, você pode parar o container do metabase e do postgres e iniciar novamente com o comando `docker-compose up -d` ou `docker compose up -d` para verificar se a integração foi realizada com sucesso. Se as informações de configuração estiverem corretas, o metabase irá se conectar ao banco de dados postgres e suas configurações estarão salvas.
-2. Acesse a pasta `P5/src/docker` e verique se as pastas `db-data`, `metabase-data` e `mongo-data` foram criadas.
+
+## Execução
+Para executar o projeto, rode os seguintes comandos:
+
+```bash
+chmod +x ./start.sh && ./start.sh
+```
+
 
 ## Demonstração
 
-[Acesse o vídeo de demonstração](https://drive.google.com/file/d/1W-fTfVh-jr9AndRh8cs00RPn1d367xOd/view?usp=drive_link)
+[Acesse o vídeo de demonstração](https://drive.google.com/file/d/1PqVF06liLjh5QyC7tkKJdTDLgpcf4cim/view?usp=sharing)
