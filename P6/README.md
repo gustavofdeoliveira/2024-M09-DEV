@@ -1,4 +1,4 @@
-# Integração com o Postgress
+# Integração do HiveMQ Cloud com Confluent Cloud
 
 ## Requisitos
 
