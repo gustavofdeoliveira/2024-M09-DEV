@@ -59,7 +59,7 @@ func publishObject(newObject map[string]interface{}, singletonClient *MQTTSubscr
 		fmt.Println("Error marshalling JSON:", err)
 		return ""
 	}
-	token := singletonClient.client.Publish("topic/publisher", 0, false, jsonData)
+	token := singletonClient.client.Publish("ponderada", 0, false, jsonData)
 	token.Wait()
 	fmt.Println("[BROKER] Publicado:", string(jsonData))
 	return string(jsonData)
@@ -100,42 +100,40 @@ func NewMQTTSubscriber() *MQTTSubscriber {
 
 func (s *MQTTSubscriber) ReceiveMessage(client MQTT.Client, msg MQTT.Message) {
 	fmt.Printf("[BROKER] Recebido: %s do tópico: %s\n", msg.Payload(), msg.Topic())
-	kafka_producer(msg)
-}
-
-func kafka_producer(msg MQTT.Message) {
-	producer, err := kafka.NewProducer(&kafka.ConfigMap{
+	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": os.Getenv("BOOTSTRAP_SERVERS"),
-		"client.id":         "go-kafka-producer",
+		"group.id":          "go-kafka-consumer",
 		"security.protocol": "SASL_SSL",
 		"sasl.mechanisms":   "PLAIN",
 		"sasl.username":     os.Getenv("SASL_USERNAME"),
 		"sasl.password":     os.Getenv("SASL_PASSWORD"),
 	})
 	if err != nil {
-		log.Fatalf("[PRODUCER] Falha ao criar produtor: %v", err)
+		log.Fatalf("[CONSUMER] Falha ao criar produtor: %v", err)
 	}
-	defer producer.Close()
+	defer consumer.Close()
 
 	topic := os.Getenv("KAFKA_TOPIC")
-	fmt.Printf("[PRODUCER] Conectado ao tópico %s...\n", topic)
+	fmt.Printf("[CONSUMER] Conectado ao tópico %s...\n", topic)
 
-	message := string(msg.Payload())
+	consumer.SubscribeTopics([]string{topic}, nil)
+	for {
+		message, err := consumer.ReadMessage(-1)
+		if err == nil {
+			fmt.Printf("[CONSUMER] Received message: %s\n", string(message.Value))
+		} else {
+			fmt.Printf("[CONSUMER] error: %v (%v)\n", err, message)
+			break
+		}
+	}
+	consumer.Close()
 
-	fmt.Printf("[PRODUCER] Parsed message: %s\n", message)
-
-	producer.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-		Value:          []byte(message),
-	}, nil)
-
-	producer.Flush(15 * 1000)
 }
 
 func main() {
 	subscriber := NewMQTTSubscriber()
 
-	subscriber.client.Subscribe("topic/publisher", 1, func(client MQTT.Client, msg MQTT.Message) {
+	subscriber.client.Subscribe("ponderada", 1, func(client MQTT.Client, msg MQTT.Message) {
 		subscriber.ReceiveMessage(client, msg)
 	})
 	var file = readFile(openFile("./data/data.json"))
@@ -146,6 +144,7 @@ func main() {
 	}
 	for _, item := range result {
 		publishObject(createObject(item), subscriber)
+		time.Sleep(5 * time.Second)
 	}
 
 	sigCh := make(chan os.Signal, 1)
