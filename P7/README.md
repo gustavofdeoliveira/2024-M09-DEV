@@ -19,7 +19,7 @@ SASL_USERNAME=""
 SASL_PASSWORD=""
 KAFKA_TOPIC="ponderada"
 MONGO_USER=prodan
-MONGO_PASSWORD=WovV9mriJMNyN2DK
+MONGO_PASSWORD=
 ```
 
 NOTA: Preencha os campos com as informações do acima.
