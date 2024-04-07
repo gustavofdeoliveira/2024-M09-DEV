@@ -10,7 +10,9 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-
+	"context"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	godotenv "github.com/joho/godotenv"
@@ -121,6 +123,7 @@ func (s *MQTTSubscriber) ReceiveMessage(client MQTT.Client, msg MQTT.Message) {
 		message, err := consumer.ReadMessage(-1)
 		if err == nil {
 			fmt.Printf("[CONSUMER] Received message: %s\n", string(message.Value))
+			inserToMongo(message.Value)
 			
 		} else {
 			fmt.Printf("[CONSUMER] error: %v (%v)\n", err, message)
@@ -129,6 +132,50 @@ func (s *MQTTSubscriber) ReceiveMessage(client MQTT.Client, msg MQTT.Message) {
 	}
 	consumer.Close()
 
+}
+
+func inserToMongo(data []byte) error {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Erro ao carregar o arquivo .env")
+	}
+
+	// Recuperar usuário e senha do arquivo .env
+	mongoUser := os.Getenv("MONGO_USER")
+	mongoPassword := os.Getenv("MONGO_PASSWORD")
+
+	// Use the SetServerAPIOptions() method to set the version of the Stable API on the client
+	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+	opts := options.Client().ApplyURI(fmt.Sprintf("mongodb+srv://%s:%s@prodan.qopo9c4.mongodb.net/?retryWrites=true&w=majority&appName=prodan", mongoUser, mongoPassword)).SetServerAPIOptions(serverAPI)
+
+	// Create a new client and connect to the server
+	client, err := mongo.Connect(context.TODO(), opts)
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		if err = client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+	coll := client.Database("db_prodan").Collection("ponderada")
+	var v interface{}
+	if err := json.Unmarshal(data, &v); err != nil {
+		log.Fatal(err)
+	}
+	json.Unmarshal([]byte(data), &v)
+	result, err := coll.InsertOne(context.TODO(), v)
+
+	if err != nil {
+		panic(err)
+	}
+	
+	if result != nil {
+		fmt.Println("[MONGO] Inserido com sucesso")
+	}
+
+	return nil
 }
 
 func main() {
