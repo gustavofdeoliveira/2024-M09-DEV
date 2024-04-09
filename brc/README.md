@@ -46,6 +46,10 @@ A implementação foi realizada em Python, utilizando a biblioteca pandas para r
 
 Para poder acompanhar o progresso do processamento, foi utilizado a biblioteca tqdm, que fornece uma barra de progresso para o loop de iteração.
 
+## Relação ao Projeto
+
+O modúlo atual serviria para processar o arquivo de dados do projeto, realizando o cálculo de min, avg e max para cada estação e armazenando em um dicionário. O arquivo ponderia ser lido e processado por linhas, enviado pro kafka e salvo no mongodb. Posteriomente, selecionar na base conforme as estações e realizar o calculo de min, avg e max.
+
 ## Google Colab
 
 O Google Colab foi utilizado para realizar o processamento do arquivo, pois o arquivo é muito grande e não é possível carregar todo o arquivo na memória. O Google Colab disponibiliza 12GB de memória RAM e 50GB de armazenamento, o que foi suficiente para realizar o processamento do arquivo.
