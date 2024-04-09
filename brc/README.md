@@ -54,8 +54,22 @@ O modúlo atual serviria para processar o arquivo de dados do projeto, realizand
 
 O Google Colab foi utilizado para realizar o processamento do arquivo, pois o arquivo é muito grande e não é possível carregar todo o arquivo na memória. O Google Colab disponibiliza 12GB de memória RAM e 50GB de armazenamento, o que foi suficiente para realizar o processamento do arquivo.
 
+### Versão do Google Colab - 1.000.000.000
+
 [Link do Google Colab](https://colab.research.google.com/drive/17klqlnlCFMlXlecbz5dPw1298vHeVeG8?usp=sharing)
 
 ## Demonstração
 
+### 300.000.000 de linhas em 1 minuto e 25 segundos
+
 [Acesse o vídeo de demonstração](https://drive.google.com/file/d/1GQnNyypDDCmOr4_QYfHf8qNKJChi6UTQ/view?usp=drive_link)
+
+### 1.000.000.000 5 minutos e 36 segundos
+
+#### Gerando o arquivo
+
+![1712673043607](image/README/create-file.png)
+
+#### Processando o arquivo
+
+![1712673097070](image/README/processed.png)
