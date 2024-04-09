@@ -16,6 +16,8 @@ numpy
 
 O maior desafio foi a leitura do arquivo, pois o arquivo é muito grande e não é possível carregar todo o arquivo na memória. Para resolver esse problema, tentei converter o arquivo de `.txt` para `.parquet`. O Resultado foi excelente, o arquivo `.parquet` ficou com 719MB e o `.txt` com 3.9GB. A leitura do arquivo `.parquet` foi muito mais rápida, diminuindo o tempo de processamento e memoria utilizada em mais que a metade.
 
+*NOTA: Também tentei utilizar libs como cudf e processar o arquivo por linha, mas não obtive sucesso.*
+
 ## Implementação
 
 A implementação foi realizada em Python, utilizando a biblioteca pandas para realizar o processamento do arquivo. O arquivo foi convertido de `.txt` para `.parquet` para diminuir o tempo de leitura do arquivo. Com o tamanho reduzido do arquivo, foi possível realizar a leitura completa e direta, dessa forma parseando o arquivo e realizando o processamento das linhas e os calculos necessários de min, avg e max. Como no exemplo abaixo:
