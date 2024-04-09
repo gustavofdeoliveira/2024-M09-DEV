@@ -18,7 +18,7 @@ O maior desafio foi a leitura do arquivo, pois o arquivo é muito grande e não 
 
 *NOTA: Também tentei utilizar libs como cudf e processar o arquivo por linha, mas não obtive sucesso.*
 
-## Implementação
+## Implementação - 300.000.000 de linhas
 
 A implementação foi realizada em Python, utilizando a biblioteca pandas para realizar o processamento do arquivo. O arquivo foi convertido de `.txt` para `.parquet` para diminuir o tempo de leitura do arquivo. Com o tamanho reduzido do arquivo, foi possível realizar a leitura completa e direta, dessa forma parseando o arquivo e realizando o processamento das linhas e os calculos necessários de min, avg e max. Como no exemplo abaixo:
 
@@ -42,6 +42,45 @@ A implementação foi realizada em Python, utilizando a biblioteca pandas para r
     # Itera sobre cada estação, criando um objeto Measurement e armazenando no dicionário
     for id, row in tqdm(grouped.iterrows(), total=grouped.shape[0], desc="Processing"):
         measurements[id] = Measurement(row['min'], row['avg'], row['max'], row['count'])
+```
+
+## Implementação - 1.000.000.000 de linhas
+
+A implementação foi realizada em Python, utilizando a biblioteca pyarrow para realizar o processamento do arquivo. O arquivo foi convertido de `.txt` para `.parquet` alterando o exemplo fornecido no challenge, para diminuir o tempo de leitura do arquivo e custo de processamento. Com o tamanho reduzido do arquivo, foi possível realizar a leitura linha por linha, dessa forma parseando o arquivo e realizando o processamento das linhas e os calculos necessários de min, avg e max. Como no exemplo abaixo:
+
+
+```python
+def process_file_with_pyarrow(filename):
+    parquet_file = pq.ParquetFile(filename)
+
+    # Dicionário para armazenar os objetos Measurement para cada estação
+    measurements = {}
+
+    # Iterar através de cada RowGroup no arquivo Parquet
+    for i in tqdm(range(parquet_file.num_row_groups), desc="Processing Row Groups"):
+        # Lê o RowGroup atual
+        table = parquet_file.read_row_group(i)
+        df = table.to_pandas()
+
+        df.columns = ['station', 'value']
+        aggregation = {
+            'value': ['min', 'max', 'mean', 'count']
+        }
+        grouped = df.groupby('station').agg(aggregation)
+        grouped.columns = ['min', 'max', 'avg', 'count']
+
+        # Atualiza o dicionário de medições
+        for id, row in grouped.iterrows():
+            if id in measurements:
+                meas = measurements[id]
+                meas.min = min(meas.min, row['min'])
+                meas.max = max(meas.max, row['max'])
+                meas.avg = (meas.avg * meas.count + row['avg'] * row['count']) / (meas.count + row['count'])
+                meas.count += row['count']
+            else:
+                measurements[id] = Measurement(row['min'], row['avg'], row['max'], row['count'])
+
+    return measurements
 ```
 
 Para poder acompanhar o progresso do processamento, foi utilizado a biblioteca tqdm, que fornece uma barra de progresso para o loop de iteração.
